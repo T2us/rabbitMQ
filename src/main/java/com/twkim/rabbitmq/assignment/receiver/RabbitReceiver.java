@@ -1,20 +1,21 @@
-package com.twkim.rabbitmq.assignment.assign1;
+package com.twkim.rabbitmq.assignment.receiver;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
-public class AssignReceiver {
+public class RabbitReceiver {
 
-	@RabbitListener(queues = "#{command.name}")
+	@RabbitListener(queues = "#{commandQueue.name}")
 	public void commandReceiver(String in) throws InterruptedException {
+
 		receive(in, "commandReceiver");
 	}
 
-	@RabbitListener(queues = "#{user.name}")
+	@RabbitListener(queues = "#{userQueue.name}")
 	public void userReceiver(String in) throws InterruptedException {
 		receive(in, "userReceiver");
 	}
 
-	@RabbitListener(queues = "#{room.name}")
+	@RabbitListener(queues = "#{roomQueue.name}")
 	public void roomReceiver(String in) throws InterruptedException {
 		receive(in, "roomReceiver");
 	}
