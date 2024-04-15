@@ -3,8 +3,15 @@ package com.twkim.rabbitmq.assignment.config;
 import com.twkim.rabbitmq.assignment.receiver.RabbitReceiver;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +19,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConditionalOnProperty(value = "my.config", havingValue = "assign1", matchIfMissing = false)
 public class RabbitConfig {
+
+	@Autowired
+	private RabbitProperties rabbitProperties;
 
 	/*
 	 * Queue -> 메시지가 최종적으로 도달하는 곳, Consumer가 메시지를 소지할 때까지 메시지를 보관
@@ -22,8 +32,8 @@ public class RabbitConfig {
 	}
 
 	@Bean
-	public Queue userQueue() {
-		return new Queue("user");
+	public Queue myUserQueue() {
+		return QueueBuilder.durable("user." + rabbitProperties.getUsername()).build();
 	}
 
 	@Bean
@@ -54,8 +64,8 @@ public class RabbitConfig {
 	}
 
 	@Bean
-	public TopicExchange roomExchange() {
-		return new TopicExchange("room");
+	public FanoutExchange roomExchange() {
+		return new FanoutExchange("room");
 	}
 
 	/*
@@ -81,18 +91,20 @@ public class RabbitConfig {
 
 	@Bean
 	public Binding bindingChatExchangeToRoomExchange(
-		TopicExchange chatExchange, TopicExchange roomExchange) {
+		TopicExchange chatExchange, FanoutExchange roomExchange) {
 		return BindingBuilder.bind(roomExchange).to(chatExchange).with("*.room.#");
 	}
 
 	@Bean
-	public Binding bindingUserExchangeToUserQueue(TopicExchange userExchange, Queue userQueue) {
-		return BindingBuilder.bind(userQueue).to(userExchange).with("*.user.#");
+	public Binding bindingUserExchangeToUserQueue(TopicExchange userExchange, Queue myUserQueue) {
+		return BindingBuilder.bind(myUserQueue)
+			.to(userExchange)
+			.with("*.user." + rabbitProperties.getUsername());
 	}
 
 	@Bean
-	public Binding bindingRoomExchangeToRoomQueue(TopicExchange roomExchange, Queue roomQueue) {
-		return BindingBuilder.bind(roomQueue).to(roomExchange).with("*.room.#");
+	public Binding bindingRoomExchangeToRoomQueue(FanoutExchange roomExchange, Queue roomQueue) {
+		return BindingBuilder.bind(roomQueue).to(roomExchange);
 	}
 
 	@Bean

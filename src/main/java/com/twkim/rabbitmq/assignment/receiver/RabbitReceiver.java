@@ -10,7 +10,7 @@ public class RabbitReceiver {
 		receive(in, "commandReceiver");
 	}
 
-	@RabbitListener(queues = "#{userQueue.name}")
+	@RabbitListener(queues = "#{myUserQueue.name}")
 	public void userReceiver(String in) throws InterruptedException {
 		receive(in, "userReceiver");
 	}
