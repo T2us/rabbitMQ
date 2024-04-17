@@ -88,6 +88,8 @@ public class AuthController {
 					"read").stream().anyMatch(request.getPermission()::equals)) {
 					// user.[자신의 아이디] 이름으로 큐 생성 허가
 					return "allow";
+				} else if ("dead-letter".equals(request.getName())) {
+					return "allow";
 				}
 			}
 		}

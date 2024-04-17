@@ -1,23 +1,20 @@
 package com.twkim.rabbitmq.assignment.config;
 
 import com.twkim.rabbitmq.assignment.receiver.RabbitReceiver;
+import com.twkim.rabbitmq.assignment.receiver.UserReceiver;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnProperty(value = "my.config", havingValue = "assign1", matchIfMissing = false)
 public class RabbitConfig {
 
 	@Autowired
@@ -33,7 +30,15 @@ public class RabbitConfig {
 
 	@Bean
 	public Queue myUserQueue() {
-		return QueueBuilder.durable("user." + rabbitProperties.getUsername()).build();
+		return QueueBuilder.durable("user." + rabbitProperties.getUsername())
+			.deadLetterExchange("")
+			.deadLetterRoutingKey("dead-letter")
+			.build();
+	}
+
+	@Bean
+	public Queue deadLetterQueue() {
+		return new Queue("dead-letter");
 	}
 
 	@Bean
@@ -66,6 +71,11 @@ public class RabbitConfig {
 	@Bean
 	public FanoutExchange roomExchange() {
 		return new FanoutExchange("room");
+	}
+
+	@Bean
+	public DirectExchange deadLetterExchange() {  // 별도의 Dead Letter Exchange 정의
+		return new DirectExchange("dead-letter-exchange");
 	}
 
 	/*
@@ -110,5 +120,9 @@ public class RabbitConfig {
 	@Bean
 	public RabbitReceiver receiver() {
 		return new RabbitReceiver();
+	}
+	@Bean
+	public UserReceiver userReceiver() {
+		return new UserReceiver();
 	}
 }
