@@ -82,6 +82,12 @@ public class AuthController {
 					return "allow";
 				} else if ("amq.default".equals(request.getName())) {
 					return "allow";
+				} else if ("chat".equals(request.getName())) {
+					return "allow";
+				} else if (request.getName().startsWith("room.")) {
+					return "allow";
+				} else if(request.getName().startsWith("user.")) {
+					return "allow";
 				}
 			} else if ("queue".equals(request.getResource())) {
 				if (("user." + request.getUsername()).equals(request.getName()) && Arrays.asList(
@@ -89,6 +95,13 @@ public class AuthController {
 					// user.[자신의 아이디] 이름으로 큐 생성 허가
 					return "allow";
 				} else if ("dead-letter".equals(request.getName())) {
+					return "allow";
+				} else if ("command".equals(request.getName()) && Arrays.asList(
+					"read").stream().anyMatch(request.getPermission()::equals)) {
+					return "allow";
+ 				} else if ("room".equals(request.getName())) {
+					return "allow";
+				} else if (request.getName().startsWith("user.")) {
 					return "allow";
 				}
 			}
@@ -102,7 +115,7 @@ public class AuthController {
 
 		log.info("postTopic : {}", objectMapper.writeValueAsString(request));
 
-		Pattern pattern = Pattern.compile("^(chat)\\.\\w+");
+		Pattern pattern = Pattern.compile("^(chat|command)\\.\\w+");
 		// 패턴 :: 문자열이 chat.* 과 일치하는지 확인
 
 		if (request.getUsername().startsWith(USER) && VHOST.equals(request.getVhost())

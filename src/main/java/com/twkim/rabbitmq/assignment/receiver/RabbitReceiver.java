@@ -6,12 +6,6 @@ import org.springframework.context.annotation.Bean;
 
 public class RabbitReceiver {
 
-	@RabbitListener(queues = "#{commandQueue.name}")
-	public void commandReceiver(String in) throws InterruptedException {
-
-		receive(in, "commandReceiver");
-	}
-
 	@RabbitListener(queues = "#{deadLetterQueue.name}")
 	public void deadLetterReceiver(String in) throws InterruptedException {
 		System.out.println(" [x] Received DeadLetter : " + in.toString());

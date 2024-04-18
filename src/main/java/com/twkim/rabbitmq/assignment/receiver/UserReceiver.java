@@ -5,6 +5,7 @@ import com.twkim.rabbitmq.assignment.error.BusinessException;
 import com.twkim.rabbitmq.assignment.error.DeadLetterException;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
 
 // RabbitListener를 이용한 messageConverter 설정
 @RabbitListener(queues = "#{myUserQueue.name}", messageConverter = "jsonMessageConverter")

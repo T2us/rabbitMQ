@@ -1,14 +1,19 @@
 package com.twkim.rabbitmq.assignment.config;
 
+import com.twkim.rabbitmq.assignment.receiver.CommandReceiver;
 import com.twkim.rabbitmq.assignment.receiver.RabbitReceiver;
 import com.twkim.rabbitmq.assignment.receiver.UserReceiver;
+import lombok.Getter;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +24,14 @@ public class RabbitConfig {
 
 	@Autowired
 	private RabbitProperties rabbitProperties;
+
+	/*
+	 * Queue, Exchange, Binding을 만들기 위한 RabbitAdmin
+	 */
+	@Bean
+	public RabbitAdmin amqpAdmin(ConnectionFactory connectionFactory) {
+		return new RabbitAdmin(connectionFactory);
+	}
 
 	/*
 	 * Queue -> 메시지가 최종적으로 도달하는 곳, Consumer가 메시지를 소지할 때까지 메시지를 보관
@@ -69,6 +82,11 @@ public class RabbitConfig {
 	}
 
 	@Bean
+	public FanoutExchange myUserExchange() {
+		return ExchangeBuilder.fanoutExchange("user." + rabbitProperties.getUsername()).build();
+	}
+
+	@Bean
 	public FanoutExchange roomExchange() {
 		return new FanoutExchange("room");
 	}
@@ -106,10 +124,17 @@ public class RabbitConfig {
 	}
 
 	@Bean
-	public Binding bindingUserExchangeToUserQueue(TopicExchange userExchange, Queue myUserQueue) {
-		return BindingBuilder.bind(myUserQueue)
+	public Binding bindingUserExchangeToMyUserExchange(
+		TopicExchange userExchange, FanoutExchange myUserExchange) {
+		return BindingBuilder.bind(myUserExchange)
 			.to(userExchange)
 			.with("*.user." + rabbitProperties.getUsername());
+	}
+
+	@Bean
+	public Binding bindingMyUserExchangeToMyUserQueue(
+		FanoutExchange myUserExchange, Queue myUserQueue) {
+		return BindingBuilder.bind(myUserQueue).to(myUserExchange);
 	}
 
 	@Bean
@@ -121,8 +146,14 @@ public class RabbitConfig {
 	public RabbitReceiver receiver() {
 		return new RabbitReceiver();
 	}
+
 	@Bean
 	public UserReceiver userReceiver() {
 		return new UserReceiver();
+	}
+
+	@Bean
+	public CommandReceiver commandReceiver() {
+		return new CommandReceiver();
 	}
 }
